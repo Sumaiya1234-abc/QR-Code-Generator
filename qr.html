@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional QR Code Generator</title>
+    <link rel="stylesheet" href="../qr.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <button id="themeBtn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-wrapper">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-qrcode"></i> QR Code Generator</h1>
+            <p>Create, customize, and share professional QR codes in seconds</p>
+        </header>
+
+        <div class="content-grid">
+            <!-- Input Section -->
+            <section class="section input-section">
+                <h2><i class="fas fa-keyboard"></i> Input</h2>
+                
+                <div class="input-group">
+                    <label>Enter Text or URL</label>
+                    <textarea id="qrText" placeholder="Paste your URL, text, phone number, email, or WiFi details..." rows="4"></textarea>
+                    <small>Max 2953 characters</small>
+                </div>
+
+                <!-- Quick Inputs -->
+                <div class="quick-inputs">
+                    <button class="quick-btn" onclick="populateURL()">
+                        <i class="fas fa-link"></i> URL
+                    </button>
+                    <button class="quick-btn" onclick="populateEmail()">
+                        <i class="fas fa-envelope"></i> Email
+                    </button>
+                    <button class="quick-btn" onclick="populatePhone()">
+                        <i class="fas fa-phone"></i> Phone
+                    </button>
+                    <button class="quick-btn" onclick="populateWiFi()">
+                        <i class="fas fa-wifi"></i> WiFi
+                    </button>
+                </div>
+
+                <div id="error" class="error-msg"></div>
+            </section>
+
+            <!-- Customization Section -->
+            <section class="section customize-section">
+                <h2><i class="fas fa-palette"></i> Customize</h2>
+
+                <div class="control-group">
+                    <label>QR Size</label>
+                    <input type="range" id="size" min="150" max="500" value="250" oninput="updateSizeDisplay()">
+                    <span class="size-display" id="sizeDisplay">250px</span>
+                </div>
+
+                <div class="color-group">
+                    <div class="control-group">
+                        <label>Dark Color</label>
+                        <div class="color-picker">
+                            <input type="color" id="darkColor" value="#000000" onchange="generateQR()">
+                            <span id="darkColorValue">#000000</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Light Color</label>
+                        <div class="color-picker">
+                            <input type="color" id="lightColor" value="#ffffff" onchange="generateQR()">
+                            <span id="lightColorValue">#ffffff</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Error Correction Level</label>
+                    <select id="errorCorrection" onchange="generateQR()">
+                        <option value="L">Low (7%)</option>
+                        <option value="M" selected>Medium (15%)</option>
+                        <option value="Q">Quartile (25%)</option>
+                        <option value="H">High (30%)</option>
+                    </select>
+                    <small>Higher levels allow recovery from damage</small>
+                </div>
+
+                <div class="control-group">
+                    <label>Add Logo/Image (Optional)</label>
+                    <input type="file" id="logoInput" accept="image/*" onchange="updateLogoPreview()">
+                    <p id="logoPreview" style="margin-top: 10px;"></p>
+                </div>
+            </section>
+
+            <!-- QR Preview Section -->
+            <section class="section preview-section">
+                <h2><i class="fas fa-image"></i> Preview</h2>
+                <div class="qr-display">
+                    <canvas id="qrCanvas"></canvas>
+                </div>
+                <div id="success" class="success-msg"></div>
+            </section>
+
+            <!-- Download Section -->
+            <section class="section download-section">
+                <h2><i class="fas fa-download"></i> Export</h2>
+                
+                <div class="download-buttons">
+                    <button class="btn btn-primary" onclick="downloadQR('png')">
+                        <i class="fas fa-file-image"></i> PNG
+                    </button>
+                    <button class="btn btn-primary" onclick="downloadQR('jpeg')">
+                        <i class="fas fa-file-image"></i> JPEG
+                    </button>
+                    <button class="btn btn-primary" onclick="downloadQR('webp')">
+                        <i class="fas fa-file-image"></i> WebP
+                    </button>
+                </div>
+
+                <div class="download-buttons">
+                    <button class="btn btn-secondary" onclick="copyQRData()">
+                        <i class="fas fa-copy"></i> Copy Data URL
+                    </button>
+                    <button class="btn btn-secondary" onclick="shareQR()">
+                        <i class="fas fa-share"></i> Share
+                    </button>
+                    <button class="btn btn-secondary" onclick="printQR()">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                </div>
+            </section>
+
+            <!-- History Section -->
+            <section class="section history-section">
+                <h2><i class="fas fa-history"></i> History</h2>
+                <div id="historyContainer" class="history-list">
+                    <p class="empty-msg">No QR codes generated yet</p>
+                </div>
+                <button class="btn btn-outline" onclick="clearHistory()" style="width: 100%; margin-top: 10px;">
+                    Clear History
+                </button>
+            </section>
+
+            <!-- URL Shortening Section -->
+            <section class="section url-shortening-section">
+                <h2><i class="fas fa-link"></i> URL Shortener</h2>
+                
+                <div class="input-group">
+                    <label>Enter Long URL</label>
+                    <input type="text" id="longUrl" placeholder="https://example.com/very/long/url" class="url-input">
+                </div>
+
+                <button class="btn btn-primary" onclick="shortenURL()" style="width: 100%; margin-bottom: 16px;">
+                    <i class="fas fa-compress"></i> Shorten URL
+                </button>
+
+                <div id="shortenedUrlDisplay" class="shortened-url-display" style="display: none;">
+                    <label>Shortened URL</label>
+                    <div class="shortened-url-box">
+                        <input type="text" id="shortenedUrl" readonly class="shortened-url-input">
+                        <button class="btn btn-sm" onclick="copyShortenedURL()">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Batch Processing Section -->
+            <section class="section batch-section">
+                <h2><i class="fas fa-cubes"></i> Batch Processing</h2>
+                
+                <div class="input-group">
+                    <label>Enter Multiple URLs/Text (one per line)</label>
+                    <textarea id="batchInput" placeholder="https://example1.com&#10;https://example2.com&#10;Email: test@example.com" rows="5"></textarea>
+                    <small>Max 20 items</small>
+                </div>
+
+                <button class="btn btn-primary" onclick="generateBatchQR()" style="width: 100%; margin-bottom: 16px;">
+                    <i class="fas fa-cogs"></i> Generate Batch
+                </button>
+
+                <div id="batchContainer" class="batch-list"></div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section class="section analytics-section">
+                <h2><i class="fas fa-chart-bar"></i> Analytics Dashboard</h2>
+                
+                <div class="analytics-tabs">
+                    <button class="tab-btn active" onclick="switchAnalyticsTab('overview')">
+                        <i class="fas fa-th"></i> Overview
+                    </button>
+                    <button class="tab-btn" onclick="switchAnalyticsTab('formats')">
+                        <i class="fas fa-pie-chart"></i> Formats
+                    </button>
+                    <button class="tab-btn" onclick="switchAnalyticsTab('trends')">
+                        <i class="fas fa-chart-line"></i> Trends
+                    </button>
+                </div>
+
+                <!-- Overview Tab -->
+                <div id="overview-tab" class="analytics-tab active">
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <div class="analytics-label">Total Generated</div>
+                            <div class="analytics-value" id="totalGenerated">0</div>
+                            <div class="analytics-subtext">All Time</div>
+                        </div>
+                        <div class="analytics-card">
+                            <div class="analytics-label">Today's Count</div>
+                            <div class="analytics-value" id="todayCount">0</div>
+                            <div class="analytics-subtext">Last 24h</div>
+                        </div>
+                        <div class="analytics-card">
+                            <div class="analytics-label">Total Exports</div>
+                            <div class="analytics-value" id="exportCount">0</div>
+                            <div class="analytics-subtext">Downloads</div>
+                        </div>
+                        <div class="analytics-card">
+                            <div class="analytics-label">Most Used</div>
+                            <div class="analytics-value" id="mostUsedFormat">URL</div>
+                            <div class="analytics-subtext">Format</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container" style="position: relative; height: 300px; margin-top: 30px;">
+                        <canvas id="generationChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Formats Tab -->
+                <div id="formats-tab" class="analytics-tab">
+                    <div class="chart-container" style="position: relative; height: 350px;">
+                        <canvas id="formatsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Trends Tab -->
+                <div id="trends-tab" class="analytics-tab">
+                    <div style="margin-bottom: 20px;">
+                        <label style="font-weight: 600; margin-right: 15px;">Time Period:</label>
+                        <select id="trendsPeriod" onchange="updateTrendsChart()" style="padding: 10px 14px; border: 2px solid var(--light-border); border-radius: 8px; cursor: pointer;">
+                            <option value="7">Last 7 Days</option>
+                            <option value="30">Last 30 Days</option>
+                            <option value="90">Last 90 Days</option>
+                        </select>
+                    </div>
+                    <div class="chart-container" style="position: relative; height: 400px;">
+                        <canvas id="trendsChart"></canvas>
+                    </div>
+                </div>
+
+                <button class="btn btn-outline" onclick="resetAnalytics()" style="width: 100%; margin-top: 20px;">
+                    <i class="fas fa-redo"></i> Reset Analytics
+                </button>
+            </section>
+
+            <!-- Bio Links Section -->
+            <section class="section biolinks-section">
+                <h2><i class="fas fa-id-card"></i> Bio Links</h2>
+                
+                <div class="input-group">
+                    <label>Profile Name</label>
+                    <input type="text" id="bioLinksName" placeholder="Your Name" class="url-input">
+                </div>
+
+                <div id="bioLinksContainer" class="biolinks-list"></div>
+
+                <button class="btn btn-primary" onclick="addBioLink()" style="width: 100%; margin-top: 16px;">
+                    <i class="fas fa-plus"></i> Add Link
+                </button>
+
+                <button class="btn btn-secondary" onclick="generateBioLinkQR()" style="width: 100%; margin-top: 10px;">
+                    <i class="fas fa-qrcode"></i> Generate Bio QR
+                </button>
+            </section>
+
+            <!-- Social Sharing Section -->
+            <section class="section social-sharing-section">
+                <h2><i class="fas fa-share-alt"></i> Social Sharing</h2>
+
+                <div class="social-buttons">
+                    <button class="social-btn facebook" onclick="shareToFacebook()" title="Share on Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </button>
+                    <button class="social-btn twitter" onclick="shareToTwitter()" title="Share on Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </button>
+                    <button class="social-btn linkedin" onclick="shareToLinkedIn()" title="Share on LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </button>
+                    <button class="social-btn whatsapp" onclick="shareToWhatsApp()" title="Share on WhatsApp">
+                        <i class="fab fa-whatsapp"></i>
+                    </button>
+                    <button class="social-btn telegram" onclick="shareToTelegram()" title="Share on Telegram">
+                        <i class="fab fa-telegram-plane"></i>
+                    </button>
+                    <button class="social-btn pinterest" onclick="shareToPinterest()" title="Share on Pinterest">
+                        <i class="fab fa-pinterest-p"></i>
+                    </button>
+                </div>
+
+                <div class="social-stats" id="socialStats"></div>
+            </section>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn btn-success" onclick="generateQR()">
+                <i class="fas fa-bolt"></i> Generate QR Code
+            </button>
+            <button class="btn btn-danger" onclick="clearQR()">
+                <i class="fas fa-trash"></i> Clear All
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <script src="../qr.js"></script>
+</body>
+</html>
